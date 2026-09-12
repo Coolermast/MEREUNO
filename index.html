@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEREUNO - Traffic Safety Card Game</title>
+    <style>
+        :root {
+            --red: #e74c3c;
+            --blue: #3498db;
+            --green: #2ecc71;
+            --yellow: #f1c40f;
+            --purple: #9b59b6;
+            --dark: #2c3e50;
+            --bg: #1a252f;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* FULLSCREEN BUTTON */
+        .fullscreen-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #fff;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.2s;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* SCREENS */
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 1000px;
+            height: 100vh;
+            max-height: 700px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            position: relative;
+        }
+
+        .active-screen {
+            display: flex;
+        }
+
+        /* MAIN MENU */
+        #menu-screen {
+            justify-content: center;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 10px;
+        }
+
+        h1.logo {
+            font-size: 4rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: #fff;
+            text-shadow: 0 5px 0 var(--red), 0 10px 0 var(--blue), 0 15px 0 var(--green);
+            animation: pulse 2s infinite alternate;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #bdc3c7;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            color: var(--yellow);
+            font-weight: bold;
+            font-style: italic;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .card-preview {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+            justify-content: center;
+        }
+
+        .card-preview .card-frame {
+            transform: rotate(-10deg) translateY(0);
+            animation: float 3s ease-in-out infinite alternate;
+        }
+        .card-preview .card-frame:nth-child(2) {
+            transform: rotate(5deg) translateY(-10deg);
+            animation-delay: 0.5s;
+        }
+
+        .menu-btn {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #a04000;
+            transition: all 0.2s;
+            margin: 10px;
+            width: 280px;
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #a04000;
+        }
+
+        .menu-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #a04000;
+        }
+
+        /* CARD DESIGN WITH REAL IMAGES */
+        .card-frame {
+            width: 105px;
+            height: 155px;
+            border-radius: 12px;
+            background-color: white;
+            border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+        }
+
+        .card-frame:hover {
+            transform: translateY(-15px) scale(1.05);
+            z-index: 10;
+        }
+
+        .card-image-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            z-index: 1;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #2c3e50, #1a252f) !important;
+            border: 4px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f1c40f;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* Card Overlay Color Tint */
+        .card-red { background-color: var(--red); color: white; }
+        .card-blue { background-color: var(--blue); color: white; }
+        .card-green { background-color: var(--green); color: white; }
+        .card-yellow { background-color: var(--yellow); color: #333; }
+        .card-purple { background-color: var(--purple); color: white; }
+
+        /* Card Elements Layout Overlay */
+        .card-corner {
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            z-index: 2;
+            background: rgba(0,0,0,0.4);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        .card-corner.top-left { align-self: flex-start; }
+        .card-corner.bottom-right { align-self: flex-end; transform: rotate(180deg); }
+
+        .card-center {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 85%;
+            height: 55%;
+            background: rgba(0, 0, 0, 0.45);
+            border-radius: 10px;
+            text-align: center;
+            z-index: 2;
+            backdrop-filter: blur(2px);
+        }
+
+        .sign-icon {
+            font-size: 1.6rem;
+        }
+
+        .card-title {
+            font-size: 0.65rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 2px;
+            line-height: 0.9;
+            color: #fff;
+        }
+
+        /* GAME BOARD */
+        #game-screen {
+            background-color: #27ae60;
+            border-radius: 20px;
+            border: 8px solid #1e8449;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.4);
+            margin: auto;
+        }
+
+        .player-area {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            background: rgba(0,0,0,0.6);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .hand {
+            display: flex;
+            justify-content: center;
+            gap: -30px;
+            width: 100%;
+            max-width: 800px;
+            overflow-x: auto;
+            padding: 10px 0;
+            min-height: 170px;
+        }
+
+        .center-board {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .pile-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pile-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #ecf0f1;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .game-btn {
+            background: #f39c12;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #d68910;
+        }
+        .game-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #d68910; }
+        .game-btn.mereuno-btn { background: #e74c3c; box-shadow: 0 4px 0 #c0392b; }
+        .game-btn.mereuno-btn:active { box-shadow: 0 2px 0 #c0392b; }
+
+        /* MODALS (QUIZ / SCAN ME) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .modal-content {
+            background: #fff;
+            color: #333;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .quiz-title {
+            color: var(--red);
+            font-size: 1.4rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+
+        .quiz-question {
+            font-size: 1.1rem;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quiz-opt-btn {
+            background: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: #2c3e50;
+        }
+
+        .quiz-opt-btn:hover {
+            background: var(--blue);
+            color: white;
+            border-color: #2980b9;
+        }
+
+        /* SCAN ME MINI GAME */
+        .minigame-container {
+            width: 100%;
+            height: 250px;
+            background: #34495e;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            margin: 15px 0;
+            border: 4px solid #2c3e50;
+        }
+
+        .road {
+            width: 33.33%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            border-right: 2px dashed #ecf0f1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding-top: 15px;
+        }
+        .road:nth-child(1) { left: 0; }
+        .road:nth-child(2) { left: 33.33%; }
+        .road:nth-child(3) { left: 66.66%; border-right: none; }
+
+        .road-sign {
+            background: #fff;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-align: center;
+            width: 90%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            cursor: pointer;
+            color: #333;
+        }
+
+        .car-player {
+            position: absolute;
+            bottom: 15px;
+            font-size: 2.2rem;
+            transition: left 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        /* ANIMATIONS */
+        @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.03); } }
+        @keyframes float { 0% { transform: rotate(-5deg) translateY(0); } 100% { transform: rotate(-5deg) translateY(-10deg); } }
+        
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10deg); }
+            40%, 80% { transform: translateX(10deg); }
+        }
+
+        .turn-indicator {
+            color: #f1c40f;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- FULLSCREEN BUTTON -->
+    <button class="fullscreen-btn" onclick="toggleFullScreen()" title="Full Screen">⛶</button>
+
+    <!-- MAIN MENU SCREEN -->
+    <div id="menu-screen" class="screen active-screen">
+        <div class="logo-container">
+            <h1 class="logo">MEREUNO</h1>
+            <div class="subtitle">Traffic Safety Card Game</div>
+            <div class="tagline">"Paham Rambu, Tertib Selalu"</div>
+        </div>
+
+        <div class="card-preview">
+            <div class="card-frame card-red">
+                <img src="https://imgur.com/hD6JjQa.png" class="card-image-bg" alt="MEREUNO Card Front">
+                <div class="card-inner-border"></div>
+                <div class="card-corner top-left">🚗</div>
+                <div class="card-center">
+                    <div class="sign-icon">🚫</div>
+                    <div class="card-title">STOP</div>
+                </div>
+                <div class="card-corner bottom-right">🚗</div>
+            </div>
+            <div class="card-frame card-blue">
+                <img src="https://imgur.com/BXxk1LG.png" class="card-image-bg" alt="MEREUNO Card Back">
+                <div class="card-inner-border"></div>
+                <div class="card-corner top-left">🏍️</div>
+                <div class="card-center">
+                    <div class="sign-icon">↩️</div>
+                    <div class="card-title">REVERSE</div>
+                </div>
+                <div class="card-corner bottom-right">🏍️</div>
+            </div>
+        </div>
+
+        <div>
+            <button class="menu-btn" onclick="startGame('bot')">🤖 PLAY WITH BOT</button><br>
+            <button class="menu-btn" onclick="startGame('dual')">👥 DUAL WITH FRIEND</button>
+        </div>
+    </div>
+
+    <!-- GAMEPLAY SCREEN -->
+    <div id="game-screen" class="screen">
+        <!-- TOP PLAYER (BOT / P2) -->
+        <div class="player-area">
+            <div class="status-badge" id="top-player-name">🤖 KOMPUTER</div>
+            <div class="turn-indicator" id="top-turn-indicator"></div>
+            <div class="hand" id="top-hand"></div>
+        </div>
+
+        <!-- CENTER BOARD -->
+        <div class="center-board">
+            <div class="pile-container">
+                <span class="pile-label">DRAW</span>
+                <div class="card-frame card-back" id="draw-pile" onclick="handleDrawClick()">
+                    <img src="https://imgur.com/BXxk1LG.png" class="card-image-bg" alt="Deck Back">
+                </div>
+            </div>
+
+            <div class="pile-container">
+                <span class="pile-label">DISCARD</span>
+                <div id="discard-pile"></div>
+            </div>
+        </div>
+
+        <!-- BOTTOM PLAYER (P1) -->
+        <div class="player-area">
+            <div class="turn-indicator" id="bottom-turn-indicator">GILIRANMU!</div>
+            <div class="hand" id="bottom-hand"></div>
+            <div class="action-btns">
+                <button class="game-btn" onclick="humanDrawCard()">DRAW CARD</button>
+                <button class="game-btn mereuno-btn" onclick="pressMereuno()">MEREUNO!</button>
+            </div>
+            <div class="status-badge" id="bottom-player-name">🎮 KAMU</div>
+        </div>
+    </div>
+
+    <!-- QUIZ MODAL (+2 / +4 / UNGU) -->
+    <div id="quiz-modal" class="modal">
+        <div class="modal-content">
+            <div class="quiz-title" id="quiz-header">🚨 TILANG +2</div>
+            <p id="quiz-subtitle">Jawab pertanyaan keselamatan berikut!</p>
+            <div class="quiz-question" id="quiz-q-text">Pertanyaan...</div>
+            <div class="quiz-options" id="quiz-options-container"></div>
+        </div>
+    </div>
+
+    <!-- SCAN ME MINI GAME MODAL -->
+    <div id="scan-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="quiz-title">📱 SCAN ME - MINI GAME</div>
+            <p id="scan-progress">PERTANYAAN 1/5</p>
+            <p class="quiz-question" id="scan-question">Pilih jalan yang sesuai!</p>
+
+            <div class="minigame-container">
+                <div class="road" onclick="driveToRoad(0)">
+                    <div class="road-sign" id="road-sign-0">Option 1</div>
+                </div>
+                <div class="road" onclick="driveToRoad(1)">
+                    <div class="road-sign" id="road-sign-1">Option 2</div>
+                </div>
+                <div class="road" onclick="driveToRoad(2)">
+                    <div class="road-sign" id="road-sign-2">Option 3</div>
+                </div>
+                <div class="car-player" id="player-car" style="left: 50%;">🚗</div>
+            </div>
+            <p style="font-size:0.8rem; color:#7f8c8d;">Klik pada lajur jalan untuk mengarahkan mobil!</p>
+        </div>
+    </div>
+
+    <!-- GAME OVER MODAL -->
+    <div id="gameover-modal" class="modal">
+        <div class="modal-content">
+            <div class="quiz-title" id="winner-title">🎉 WINNER!</div>
+            <p id="winner-stats" style="margin: 15px 0; line-height: 1.6;"></p>
+            <button class="menu-btn" onclick="location.reload()">MAIN LAGI</button>
+        </div>
+    </div>
+
+    <script>
+        /* === CARD IMAGE ASSETS === */
+        const CARD_FRONT_IMG = "https://imgur.com/hD6JjQa.png";
+        const CARD_BACK_IMG = "https://imgur.com/BXxk1LG.png";
+
+        /* === SOUND SYNTHESIZER (Web Audio API) === */
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'playCard') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'drawCard') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(500, now + 0.06);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+                osc.start(now);
+                osc.stop(now + 0.06);
+            } else if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.setValueAtTime(100, now + 0.1);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.setValueAtTime(600, now + 0.15);
+                osc.frequency.setValueAtTime(800, now + 0.3);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            }
+        }
+
+        /* === FULLSCREEN TOGGLE === */
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Gagal mengaktifkan Fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        /* === GAME DATA & CONFIGURATION === */
+        const ICONS = {
+            CAR: '🚗',
+            MOTOR: '🏍️',
+            TRUCK: '🚚',
+            PEDESTRIAN: '🚶',
+            GROUP: '👥'
+        };
+
+        const COLORS = ['red', 'blue', 'green', 'yellow'];
+
+        const SIGNS_DATABASE = [
+            { title: 'Dilarang Parkir', icon: '🅿️❌', type: 'prohibition', category: 'CAR' },
+            { title: 'Dilarang Masuk', icon: '⛔', type: 'prohibition', category: 'CAR' },
+            { title: 'Dilarang Stop', icon: '🚫', type: 'prohibition', category: 'MOTOR' },
+            { title: 'Batas Kecepatan', icon: '5️⃣0️⃣', type: 'regulatory', category: 'CAR' },
+            { title: 'Penyebar Jalan', icon: '🚶', type: 'warning', category: 'PEDESTRIAN' },
+            { title: 'Lampu Lalu Lintas', icon: '🚦', type: 'warning', category: 'GROUP' },
+            { title: 'Wajib Belok Kiri', icon: '⬅️', type: 'mandatory', category: 'TRUCK' },
+            { title: 'Jalan Licin', icon: '⚠️', type: 'warning', category: 'CAR' },
+            { title: 'Area Penyeberangan', icon: '🚸', type: 'warning', category: 'PEDESTRIAN' }
+        ];
+
+        const QUIZ_BANK = [
+            {
+                q: "Apa arti dari rambu Dilarang Parkir?",
+                opts: ["Tidak boleh berhenti sejenak", "Tidak boleh memarkir kendaraan", "Khusus parkir motor", "Boleh parkir hari libur"],
+                ans: 1
+            },
+            {
+                q: "Rambu peringatan keselamatan jalan umumnya mendominasi warna apa?",
+                opts: ["Merah", "Kuning", "Hijau", "Biru"],
+                ans: 1
+            },
+            {
+                q: "Apa fungsi utama dari Zebra Cross?",
+                opts: ["Tempat berjualan", "Area menyeberang pejalan kaki", "Jalur khusus sepeda motor", "Batas berhenti mobil"],
+                ans: 1
+            },
+            {
+                q: "Ikon Pejalan Kaki (🚶) pada kartu menunjukkan keselamatan bagi...",
+                opts: ["Pengendara Truk", "Pengendara Mobil", "Pejalan Kaki", "Pengendara Motor"],
+                ans: 2
+            },
+            {
+                q: "Apa yang harus dilakukan saat melihat lampu lalu lintas berwarna KUNING?",
+                opts: ["Ngebut secepatnya", "Bersiap untuk berhenti", "Langsung jalan terus", "Matikan mesin"],
+                ans: 1
+            },
+            {
+                q: "Rambu perintah (misal: Wajib Belok Kiri) umumnya berwarna dasar...",
+                opts: ["Merah", "Biru", "Kuning", "Hijau"],
+                ans: 1
+            }
+        ];
+
+        /* === GAME STATE === */
+        let gameMode = 'bot';
+        let deck = [];
+        let discardPile = [];
+        let players = [
+            { id: 0, name: 'KAMU', hand: [], isBot: false, score: 0, saidMereuno: false },
+            { id: 1, name: 'KOMPUTER', hand: [], isBot: true, score: 0, saidMereuno: false }
+        ];
+        let currentPlayerIdx = 0;
+        let quizCallback = null;
+        
+        let scanQuestionsQueue = [];
+        let scanCurrentIndex = 0;
+        let scanWrongCount = 0;
+        let scanTargetPlayer = null;
+
+        /* === ENGINE & SETUP === */
+        function generateDeck() {
+            let result = [];
+            let idCounter = 1;
+
+            const iconKeys = Object.keys(ICONS);
+
+            COLORS.forEach(color => {
+                SIGNS_DATABASE.forEach(sign => {
+                    result.push({
+                        id: idCounter++,
+                        color: color,
+                        icon: ICONS[sign.category],
+                        iconType: sign.category,
+                        title: sign.title,
+                        signIcon: sign.icon,
+                        action: null
+                    });
+                });
+
+                iconKeys.forEach(key => {
+                    result.push({
+                        id: idCounter++,
+                        color: color,
+                        icon: ICONS[key],
+                        iconType: key,
+                        title: '+2 TILANG',
+                        signIcon: '➕2️⃣',
+                        action: '+2'
+                    });
+                    result.push({
+                        id: idCounter++,
+                        color: color,
+                        icon: ICONS[key],
+                        iconType: key,
+                        title: 'SKIP',
+                        signIcon: '🚫',
+                        action: 'skip'
+                    });
+                    result.push({
+                        id: idCounter++,
+                        color: color,
+                        icon: ICONS[key],
+                        iconType: key,
+                        title: 'REVERSE',
+                        signIcon: '↩️',
+                        action: 'reverse'
+                    });
+                });
+            });
+
+            for(let i=0; i<4; i++) {
+                result.push({
+                    id: idCounter++,
+                    color: 'purple',
+                    icon: ICONS.GROUP,
+                    iconType: 'GROUP',
+                    title: '+4 TILANG',
+                    signIcon: '➕4️⃣',
+                    action: '+4'
+                });
+                result.push({
+                    id: idCounter++,
+                    color: 'purple',
+                    icon: ICONS.CAR,
+                    iconType: 'CAR',
+                    title: 'SCAN ME',
+                    signIcon: '📱',
+                    action: 'scanme'
+                });
+            }
+
+            return result.sort(() => Math.random() - 0.5);
+        }
+
+        function startGame(mode) {
+            initAudio();
+            gameMode = mode;
+            deck = generateDeck();
+            
+            players[0] = { id: 0, name: 'KAMU', hand: [], isBot: false, score: 0, saidMereuno: false };
+            if(mode === 'bot') {
+                players[1] = { id: 1, name: 'KOMPUTER', hand: [], isBot: true, score: 0, saidMereuno: false };
+            } else {
+                players[1] = { id: 1, name: 'PEMAIN 2', hand: [], isBot: false, score: 0, saidMereuno: false };
+            }
+
+            for(let i=0; i<7; i++) {
+                players[0].hand.push(deck.pop());
+                players[1].hand.push(deck.pop());
+            }
+
+            let topCard = deck.pop();
+            while(topCard.color === 'purple') {
+                deck.unshift(topCard);
+                topCard = deck.pop();
+            }
+            discardPile.push(topCard);
+
+            document.getElementById('menu-screen').classList.remove('active-screen');
+            document.getElementById('game-screen').classList.add('active-screen');
+
+            document.getElementById('top-player-name').innerText = gameMode === 'bot' ? '🤖 KOMPUTER' : '🎮 PEMAIN 2';
+            document.getElementById('bottom-player-name').innerText = gameMode === 'bot' ? '🎮 KAMU' : '🎮 PEMAIN 1';
+
+            currentPlayerIdx = 0;
+            renderBoard();
+        }
+
+        /* === RENDER LOGIC === */
+        function createCardElement(card, isHidden = false) {
+            const el = document.createElement('div');
+            el.className = `card-frame ${isHidden ? 'card-back' : 'card-' + card.color}`;
+            
+            if(isHidden) {
+                el.innerHTML = `<img src="${CARD_BACK_IMG}" class="card-image-bg" alt="Back">`;
+                return el;
+            }
+
+            el.innerHTML = `
+                <img src="${CARD_FRONT_IMG}" class="card-image-bg" alt="Front Card">
+                <div class="card-corner top-left">${card.icon}</div>
+                <div class="card-center">
+                    <div class="sign-icon">${card.signIcon}</div>
+                    <div class="card-title">${card.title}</div>
+                </div>
+                <div class="card-corner bottom-right">${card.icon}</div>
+            `;
+            return el;
+        }
+
+        function renderBoard() {
+            const topHandEl = document.getElementById('top-hand');
+            const bottomHandEl = document.getElementById('bottom-hand');
+            const discardEl = document.getElementById('discard-pile');
+
+            topHandEl.innerHTML = '';
+            bottomHandEl.innerHTML = '';
+            discardEl.innerHTML = '';
+
+            const isTopHidden = (gameMode === 'bot');
+            players[1].hand.forEach((card, idx) => {
+                const cEl = createCardElement(card, isTopHidden);
+                if(!isTopHidden && currentPlayerIdx === 1) {
+                    cEl.onclick = () => playCard(1, idx);
+                }
+                topHandEl.appendChild(cEl);
+            });
+
+            players[0].hand.forEach((card, idx) => {
+                const cEl = createCardElement(card, false);
+                if(currentPlayerIdx === 0) {
+                    cEl.onclick = () => playCard(0, idx);
+                }
+                bottomHandEl.appendChild(cEl);
+            });
+
+            const topDiscard = discardPile[discardPile.length - 1];
+            if(topDiscard) {
+                discardEl.appendChild(createCardElement(topDiscard, false));
+            }
+
+            document.getElementById('bottom-turn-indicator').innerText = (currentPlayerIdx === 0) ? "👉 GILIRANMU!" : "";
+            document.getElementById('top-turn-indicator').innerText = (currentPlayerIdx === 1) ? "👉 GILIRAN LAWAN!" : "";
+
+            if(currentPlayerIdx === 1 && players[1].isBot) {
+                setTimeout(botTurn, 1200);
+            }
+        }
+
+        /* === GAMEPLAY MECHANICS === */
+        function isValidMove(card) {
+            const topCard = discardPile[discardPile.length - 1];
+            
+            if(card.color === 'purple') return true;
+            if(card.color === topCard.color) return true;
+            if(card.iconType === topCard.iconType) return true;
+            if(card.action && card.action === topCard.action) return true;
+            if(card.title === topCard.title) return true;
+
+            return false;
+        }
+
+        function playCard(playerIdx, cardIdx) {
+            if(playerIdx !== currentPlayerIdx) return;
+
+            const player = players[playerIdx];
+            const card = player.hand[cardIdx];
+
+            if(!isValidMove(card)) {
+                playSound('wrong');
+                const handContainer = playerIdx === 0 ? document.getElementById('bottom-hand') : document.getElementById('top-hand');
+                if(handContainer.children[cardIdx]) {
+                    handContainer.children[cardIdx].classList.add('shake');
+                    setTimeout(() => handContainer.children[cardIdx].classList.remove('shake'), 400);
+                }
+                return;
+            }
+
+            playSound('playCard');
+            player.hand.splice(cardIdx, 1);
+            discardPile.push(card);
+
+            if(player.hand.length === 1 && !player.saidMereuno) {
+                if(player.isBot && Math.random() < 0.8) {
+                    player.saidMereuno = true;
+                }
+            }
+
+            handleCardAction(card, () => {
+                if(player.hand.length === 0) {
+                    showGameOver(player);
+                    return;
+                }
+
+                if(card.action === 'skip' || card.action === 'reverse') {
+                    renderBoard();
+                } else {
+                    switchTurn();
+                }
+            });
+        }
+
+        function switchTurn() {
+            currentPlayerIdx = currentPlayerIdx === 0 ? 1 : 0;
+            renderBoard();
+        }
+
+        function drawCardFromDeck(playerIdx, count = 1) {
+            playSound('drawCard');
+            for(let i=0; i<count; i++) {
+                if(deck.length === 0) {
+                    const top = discardPile.pop();
+                    deck = discardPile.sort(() => Math.random() - 0.5);
+                    discardPile = [top];
+                }
+                if(deck.length > 0) {
+                    players[playerIdx].hand.push(deck.pop());
+                }
+            }
+            players[playerIdx].saidMereuno = false;
+        }
+
+        function humanDrawCard() {
+            if(currentPlayerIdx !== 0) return;
+            drawCardFromDeck(0, 1);
+            switchTurn();
+        }
+
+        function handleDrawClick() {
+            if(currentPlayerIdx === 0) humanDrawCard();
+        }
+
+        function pressMereuno() {
+            const player = players[0];
+            if(player.hand.length === 1) {
+                player.saidMereuno = true;
+                playSound('correct');
+                alert("🎉 MEREUNO! (Bonus +100)");
+            } else {
+                playSound('wrong');
+                alert("Kartumu bukan 1!");
+            }
+        }
+
+        /* === ACTION CARD & QUIZ SYSTEM === */
+        function handleCardAction(card, callback) {
+            const targetPlayerIdx = currentPlayerIdx === 0 ? 1 : 0;
+            const targetPlayer = players[targetPlayerIdx];
+
+            if(card.action === '+2') {
+                triggerQuizChallenge(targetPlayer, 2, callback);
+            } else if(card.action === '+4') {
+                triggerQuizChallenge(targetPlayer, 4, callback);
+            } else if(card.action === 'scanme') {
+                triggerScanMeMiniGame(targetPlayer, callback);
+            } else {
+                callback();
+            }
+        }
+
+        function triggerQuizChallenge(player, questionCount, callback) {
+            let wrongAnswers = 0;
+            let currentQ = 0;
+
+            function askNext() {
+                if(currentQ >= questionCount) {
+                    if(wrongAnswers > 0) {
+                        drawCardFromDeck(player.id, wrongAnswers);
+                    }
+                    callback();
+                    return;
+                }
+
+                const randomQuiz = QUIZ_BANK[Math.floor(Math.random() * QUIZ_BANK.length)];
+
+                if(player.isBot) {
+                    const isCorrect = Math.random() < 0.75;
+                    if(!isCorrect) wrongAnswers++;
+                    currentQ++;
+                    setTimeout(askNext, 400);
+                } else {
+                    const modal = document.getElementById('quiz-modal');
+                    document.getElementById('quiz-header').innerText = `🚨 TILANG +${questionCount} (${currentQ+1}/${questionCount})`;
+                    document.getElementById('quiz-q-text').innerText = randomQuiz.q;
+
+                    const optsContainer = document.getElementById('quiz-options-container');
+                    optsContainer.innerHTML = '';
+
+                    randomQuiz.opts.forEach((optText, optIdx) => {
+                        const btn = document.createElement('button');
+                        btn.className = 'quiz-opt-btn';
+                        btn.innerText = optText;
+                        btn.onclick = () => {
+                            if(optIdx === randomQuiz.ans) {
+                                playSound('correct');
+                            } else {
+                                playSound('wrong');
+                                wrongAnswers++;
+                            }
+                            modal.style.display = 'none';
+                            currentQ++;
+                            askNext();
+                        };
+                        optsContainer.appendChild(btn);
+                    });
+
+                    modal.style.display = 'flex';
+                }
+            }
+
+            askNext();
+        }
+
+        /* === SCAN ME MINI GAME SYSTEM === */
+        function triggerScanMeMiniGame(player, callback) {
+            scanTargetPlayer = player;
+            scanWrongCount = 0;
+            scanCurrentIndex = 0;
+
+            scanQuestionsQueue = [];
+            for(let i=0; i<5; i++) {
+                const q = QUIZ_BANK[Math.floor(Math.random() * QUIZ_BANK.length)];
+                scanQuestionsQueue.push(q);
+            }
+
+            if(player.isBot) {
+                for(let i=0; i<5; i++) {
+                    if(Math.random() >= 0.75) {
+                        scanWrongCount++;
+                    }
+                }
+                if(scanWrongCount > 0) {
+                    drawCardFromDeck(player.id, scanWrongCount);
+                }
+                callback();
+            } else {
+                quizCallback = callback;
+                document.getElementById('scan-modal').style.display = 'flex';
+                loadScanQuestion();
+            }
+        }
+
+        function loadScanQuestion() {
+            if(scanCurrentIndex >= 5) {
+                document.getElementById('scan-modal').style.display = 'none';
+                if(scanWrongCount > 0) {
+                    alert(`Mini Game Selesai! Kamu salah ${scanWrongCount} kali. Mendapat +${scanWrongCount} kartu.`);
+                    drawCardFromDeck(scanTargetPlayer.id, scanWrongCount);
+                } else {
+                    playSound('win');
+                    alert(`🎉 SEMPURNA! 5/5 Benar. Tidak mendapat kartu tambahan!`);
+                }
+                if(quizCallback) quizCallback();
+                return;
+            }
+
+            const q = scanQuestionsQueue[scanCurrentIndex];
+            document.getElementById('scan-progress').innerText = `PERTANYAAN ${scanCurrentIndex + 1}/5 (Salah: ${scanWrongCount})`;
+            document.getElementById('scan-question').innerText = q.q;
+
+            let options = [...q.opts].slice(0, 3);
+            let correctIndex = q.ans % 3;
+
+            document.getElementById('road-sign-0').innerText = options[0] || q.opts[0];
+            document.getElementById('road-sign-1').innerText = options[1] || q.opts[1];
+            document.getElementById('road-sign-2').innerText = options[2] || q.opts[2];
+
+            document.getElementById('scan-modal').dataset.correct = correctIndex;
+        }
+
+        function driveToRoad(roadIdx) {
+            const car = document.getElementById('player-car');
+            const positions = ['16.66%', '50%', '83.33%'];
+            car.style.left = positions[roadIdx];
+
+            const correctIdx = parseInt(document.getElementById('scan-modal').dataset.correct);
+
+            setTimeout(() => {
+                if(roadIdx !== correctIdx) {
+                    playSound('wrong');
+                    scanWrongCount++;
+                } else {
+                    playSound('correct');
+                }
+                scanCurrentIndex++;
+                loadScanQuestion();
+            }, 300);
+        }
+
+        /* === BOT AI LOGIC === */
+        function botTurn() {
+            if(currentPlayerIdx !== 1) return;
+
+            const botHand = players[1].hand;
+            let playableIndices = [];
+
+            botHand.forEach((c, idx) => {
+                if(isValidMove(c)) playableIndices.push(idx);
+            });
+
+            if(playableIndices.length > 0) {
+                const chosenIdx = playableIndices[Math.floor(Math.random() * playableIndices.length)];
+                playCard(1, chosenIdx);
+            } else {
+                drawCardFromDeck(1, 1);
+                switchTurn();
+            }
+        }
+
+        /* === GAME OVER === */
+        function showGameOver(winner) {
+            playSound('win');
+            document.getElementById('gameover-modal').style.display = 'flex';
+            document.getElementById('winner-title').innerText = `${winner.name} WINS! 🎉`;
+            document.getElementById('winner-stats').innerHTML = `
+                Selamat! Permainan selesai.<br>
+                <strong>Pemenang:</strong> ${winner.name}<br>
+                Sisa Kartu Lawan: ${players[winner.id === 0 ? 1 : 0].hand.length} Kartu
+            `;
+        }
+    </script>
+</body>
+</html>
